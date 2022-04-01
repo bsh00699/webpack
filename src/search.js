@@ -1,10 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import './search.less'
+import jie from './images/jielun.jpeg'
 
 const Search = () => {
 
   return (
-    <div>Search</div>
+    <div className='text'>Search test
+      <img src={jie} />
+    </div>
   )
 }
 
