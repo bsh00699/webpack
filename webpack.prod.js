@@ -6,6 +6,35 @@ const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 const webpack = require('webpack')
 
+const setMPA = () => {
+  const entry = {}
+  const htmlWebPackPlugIn = []
+  const entryFiles = glob.sync(path.join(__dirname, './src/*/index.js'))
+  entryFiles.forEach((index) => {
+    const match = index.match(/src\/(.*)\/index.js/)
+    const pageName = match && match[1]
+    entry[pageName] = index
+    htmlWebPackPlugIn.push(
+      new HtmlWebPackPlugIn({
+        template: path.join(__dirname, `src/${pageName}/index.html`),
+        filename: `${pageName}.html`,
+        chunks: [pageName], // 将打包生成的所有资源(JS/CSS)自动引入到html
+        inject: true,
+        minify: {
+          // 移除空格
+          collapseWhitespace: true,
+          // 移除注释
+          removeComments: true,
+        }
+      })
+    )
+  })
+  return {
+    entry,
+    htmlWebPackPlugIn
+  }
+}
+
 module.exports = {
   entry: {
     index: "./src/index.js",
