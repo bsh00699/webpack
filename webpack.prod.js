@@ -1,3 +1,4 @@
+const glob = require('glob')
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
@@ -11,18 +12,22 @@ const setMPA = () => {
   const htmlWebPackPlugIn = []
   const entryFiles = glob.sync(path.join(__dirname, './src/*/index.js'))
   entryFiles.forEach((index) => {
-    const match = index.match(/src\/(.*)\/index.js/)
+    const match = index.match(/src\/(.*)\/index\.js/)
     const pageName = match && match[1]
     entry[pageName] = index
     htmlWebPackPlugIn.push(
-      new HtmlWebPackPlugIn({
+      new HtmlWebpackPlugin({
         template: path.join(__dirname, `src/${pageName}/index.html`),
         filename: `${pageName}.html`,
         chunks: [pageName], // 将打包生成的所有资源(JS/CSS)自动引入到html
         inject: true,
         minify: {
+          html5: true,
           // 移除空格
           collapseWhitespace: true,
+          preserveLineBreaks: false,
+          minifyCSS: true,
+          minifyJS: true,
           // 移除注释
           removeComments: true,
         }
@@ -35,11 +40,12 @@ const setMPA = () => {
   }
 }
 
+const { entry, htmlWebPackPlugIn } = setMPA()
+
+console.log('htmlWebPackPlugIn-', htmlWebPackPlugIn);
+
 module.exports = {
-  entry: {
-    index: "./src/index.js",
-    search: "./src/search.js"
-  },
+  entry: entry,
   output: {
     filename: "[name]_[chunkhash:8].js",
     path: path.join(__dirname, "build")
@@ -111,39 +117,6 @@ module.exports = {
       assetNameRegExp: /\.css$/g,
       cssProcessor: require('cssnano'),
     }),
-    new HtmlWebpackPlugin({
-      // 复制./src/index.html 下的html资源，然后将打包生成的所有资源(JS/CSS)自动引入
-      template: path.join(__dirname, 'src/index.html'),
-      filename: 'index.html',
-      chunks: ['index'], // 将打包生成的所有资源(JS/CSS)自动引入到html
-      inject: true, // 将打包生成的所有资源(JS/CSS)自动引入到html
-      minify: {
-        html5: true,
-        // 移除空格
-        collapseWhitespace: true,
-        preserveLineBreaks: false,
-        minifyCSS: true,
-        minifyJS: true,
-        // 移除注释
-        removeComments: true,
-      }
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, 'src/search.html'),
-      filename: 'search.html',
-      chunks: ['search'],
-      inject: true,
-      minify: {
-        html5: true,
-        // 移除空格
-        collapseWhitespace: true,
-        preserveLineBreaks: false,
-        minifyCSS: true,
-        minifyJS: true,
-        // 移除注释
-        removeComments: true,
-      }
-    }),
     new CleanWebpackPlugin()
-  ],
+  ].concat(htmlWebPackPlugIn),
 }
