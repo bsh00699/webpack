@@ -4,22 +4,22 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
-
-const webpack = require('webpack')
+const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin');
 
 const setMPA = () => {
   const entry = {}
-  const htmlWebPackPlugIn = []
+  const htmlWebpackPlugins = []
   const entryFiles = glob.sync(path.join(__dirname, './src/*/index.js'))
   entryFiles.forEach((index) => {
     const match = index.match(/src\/(.*)\/index\.js/)
     const pageName = match && match[1]
     entry[pageName] = index
-    htmlWebPackPlugIn.push(
+    htmlWebpackPlugins.push(
       new HtmlWebpackPlugin({
+        inlineSource: '.css$',
         template: path.join(__dirname, `src/${pageName}/index.html`),
         filename: `${pageName}.html`,
-        chunks: [pageName], // 将打包生成的所有资源(JS/CSS)自动引入到html
+        chunks: ['commons', pageName], // 将打包生成的所有资源(JS/CSS)自动引入到html
         inject: true,
         minify: {
           html5: true,
@@ -36,13 +36,11 @@ const setMPA = () => {
   })
   return {
     entry,
-    htmlWebPackPlugIn
+    htmlWebpackPlugins
   }
 }
 
-const { entry, htmlWebPackPlugIn } = setMPA()
-
-console.log('htmlWebPackPlugIn-', htmlWebPackPlugIn);
+const { entry, htmlWebpackPlugins } = setMPA()
 
 module.exports = {
   entry: entry,
@@ -117,6 +115,32 @@ module.exports = {
       assetNameRegExp: /\.css$/g,
       cssProcessor: require('cssnano'),
     }),
-    new CleanWebpackPlugin()
-  ].concat(htmlWebPackPlugIn),
+    new CleanWebpackPlugin(),
+    // new HtmlWebpackExternalsPlugin({ // 基础库分离: 基础包通过 cdn 引入，不打入 bundle 中
+    //   externals: [
+    //     {
+    //       module: 'react',
+    //       entry: 'https://now8.gtimg.com/now/lib/16.2.0/react.min.js', // cdn 文件
+    //       global: 'React'
+    //     },
+    //     {
+    //       module: 'react-dom',
+    //       entry: 'https://now8.gtimg.com/now/lib/16.2.0/react-dom.min.js',
+    //       global: 'ReactDOM'
+    //     }
+    //   ]
+    // })
+  ].concat(htmlWebpackPlugins),
+  optimization: { // 页面公共脚本分离
+    splitChunks: {
+      minSize: 0,
+      cacheGroups: {
+        commons: {
+          name: 'commons',
+          chunks: 'all',
+          minChunks: 2,
+        }
+      }
+    }
+  }
 }
