@@ -5,6 +5,7 @@ const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plug
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin');
+const webpack = require('webpack')
 
 const setMPA = () => {
   const entry = {}
@@ -116,6 +117,7 @@ module.exports = {
       cssProcessor: require('cssnano'),
     }),
     new CleanWebpackPlugin(),
+    new webpack.optimize.ModuleConcatenationPlugin()
     // new HtmlWebpackExternalsPlugin({ // 基础库分离: 基础包通过 cdn 引入，不打入 bundle 中
     //   externals: [
     //     {
