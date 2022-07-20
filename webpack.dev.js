@@ -2,6 +2,7 @@ const glob = require('glob')
 const path = require('path')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
 const webpack = require('webpack')
 
 const setMPA = () => {
@@ -80,14 +81,16 @@ module.exports = {
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
-    new CleanWebpackPlugin()
+    new CleanWebpackPlugin(),
+    new FriendlyErrorsWebpackPlugin()
   ].concat(htmlWebpackPlugins),
   devServer: {
     contentBase: path.join(__dirname, 'build'),
     compress: true,
     hot: true,
     // port: 8005,
-    open: true
+    open: true,
+    stats: 'errors-only'
   },
   devtool: 'source-map'
 }
