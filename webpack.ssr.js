@@ -10,30 +10,32 @@ const webpack = require('webpack')
 const setMPA = () => {
   const entry = {}
   const htmlWebpackPlugins = []
-  const entryFiles = glob.sync(path.join(__dirname, './src/*/index.js'))
+  const entryFiles = glob.sync(path.join(__dirname, './src/*/index-server.js'))
   entryFiles.forEach((index) => {
-    const match = index.match(/src\/(.*)\/index\.js/)
+    const match = index.match(/src\/(.*)\/index-server\.js/)
     const pageName = match && match[1]
-    entry[pageName] = index
-    htmlWebpackPlugins.push(
-      new HtmlWebpackPlugin({
-        inlineSource: '.css$',
-        template: path.join(__dirname, `src/${pageName}/index.html`),
-        filename: `${pageName}.html`,
-        chunks: ['commons', pageName], // 将打包生成的所有资源(JS/CSS)自动引入到html
-        inject: true,
-        minify: {
-          html5: true,
-          // 移除空格
-          collapseWhitespace: true,
-          preserveLineBreaks: false,
-          minifyCSS: true,
-          minifyJS: true,
-          // 移除注释
-          removeComments: true,
-        }
-      })
-    )
+    if (pageName) {
+      entry[pageName] = index
+      htmlWebpackPlugins.push(
+        new HtmlWebpackPlugin({
+          inlineSource: '.css$',
+          template: path.join(__dirname, `src/${pageName}/index.html`),
+          filename: `${pageName}.html`,
+          chunks: ['commons', pageName], // 将打包生成的所有资源(JS/CSS)自动引入到html
+          inject: true,
+          minify: {
+            html5: true,
+            // 移除空格
+            collapseWhitespace: true,
+            preserveLineBreaks: false,
+            minifyCSS: true,
+            minifyJS: true,
+            // 移除注释 (SSR打包需要在html引入占位符 <!-- HTML_PLACEHOLDER -->，这个注释不能忽略)
+            // removeComments: true,
+          }
+        })
+      )
+    }
   })
   return {
     entry,
@@ -46,8 +48,9 @@ const { entry, htmlWebpackPlugins } = setMPA()
 module.exports = {
   entry: entry,
   output: {
-    filename: "[name]_[chunkhash:8].js",
-    path: path.join(__dirname, "build")
+    filename: "[name]-server.js",
+    path: path.join(__dirname, "build"),
+    libraryTarget: 'umd'
   },
   mode: 'production',
   module: {
