@@ -123,7 +123,18 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
     new webpack.optimize.ModuleConcatenationPlugin(),
-    new FriendlyErrorsWebpackPlugin()
+    new FriendlyErrorsWebpackPlugin(),
+    // 构建异常捕获
+    function () {
+      this.hooks.done.tap('done', (stats) => {
+        if (stats.compilation.errors
+          && stats.compilation.errors.length
+          && process.argv.indexOf('--watch') === -1) {
+          console.log('build error');
+          process.exit(1)
+        }
+      })
+    }
     // new HtmlWebpackExternalsPlugin({ // 基础库分离: 基础包通过 cdn 引入，不打入 bundle 中
     //   externals: [
     //     {
